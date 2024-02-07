@@ -7,8 +7,9 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"encoding/json"
+	"strings"
 
-	"github.com/monoculum/formam/v3"
 	"golang.org/x/text/language"
 	"zgo.at/goatcounter/v2"
 	"zgo.at/goatcounter/v2/metrics"
@@ -16,6 +17,8 @@ import (
 	"zgo.at/zhttp"
 	"zgo.at/zstd/ztime"
 )
+
+var forwardedForHeader = http.CanonicalHeaderKey("X-Forwarded-For")
 
 // Use GIF because it's the smallest filesize (PNG is 116 bytes, vs 43 for GIF).
 var gif = []byte{0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x1, 0x0, 0x1, 0x0, 0x80,
@@ -48,9 +51,11 @@ func (h backend) count(w http.ResponseWriter, r *http.Request) error {
 		return zhttp.Bytes(w, gif)
 	}
 
+	cip := extractClientIP(r)
+
 	site := Site(r.Context())
 	for _, ip := range site.Settings.IgnoreIPs {
-		if ip == r.RemoteAddr {
+		if ip == cip {
 			w.Header().Add("X-Goatcounter", fmt.Sprintf("ignored because %q is in the IP ignore list", ip))
 			w.WriteHeader(http.StatusAccepted)
 			return zhttp.Bytes(w, gif)
@@ -61,11 +66,11 @@ func (h backend) count(w http.ResponseWriter, r *http.Request) error {
 		Site:            site.ID,
 		UserAgentHeader: r.UserAgent(),
 		CreatedAt:       ztime.Now(),
-		RemoteAddr:      r.RemoteAddr,
+		RemoteAddr:      cip,
 	}
 	if site.Settings.Collect.Has(goatcounter.CollectLocation) {
 		var l goatcounter.Location
-		hit.Location = l.LookupIP(r.Context(), r.RemoteAddr)
+		hit.Location = l.LookupIP(r.Context(), cip)
 	}
 
 	if site.Settings.Collect.Has(goatcounter.CollectLanguage) {
@@ -79,10 +84,7 @@ func (h backend) count(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	err := formam.NewDecoder(&formam.DecoderOptions{
-		TagName:           "json",
-		IgnoreUnknownKeys: true,
-	}).Decode(r.URL.Query(), &hit)
+	err := json.NewDecoder(r.Body).Decode(&hit)
 	if err != nil {
 		w.Header().Add("X-Goatcounter", fmt.Sprintf("error decoding parameters: %s", err))
 		w.WriteHeader(400)
@@ -113,4 +115,23 @@ func (h backend) count(w http.ResponseWriter, r *http.Request) error {
 
 	goatcounter.Memstore.Append(hit)
 	return zhttp.Bytes(w, gif)
+}
+
+// Extract client IP in case of goatcounter sitting on top of one or more proxies
+// https://gist.github.com/17twenty/c815680c9c585cd9c16e62cbee7317b6
+func extractClientIP(r *http.Request) string {
+	ffips := r.Header.Get(forwardedForHeader)
+	rip := r.RemoteAddr
+
+	if ffips == "" {
+		return rip
+	}
+
+	rip = ffips
+	ips := strings.Split(rip, ", ")
+	if len(ips) > 1 {
+		rip = ips[len(ips) - 1]
+	}
+
+	return rip
 }
