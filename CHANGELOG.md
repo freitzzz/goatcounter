@@ -4,6 +4,18 @@ This list is not comprehensive, and only lists new features and major changes,
 but not every minor bugfix. The goatcounter.com service generally runs the
 latest master.
 
+2024-02-07 v-freitzzz-2.5.1
+-----------------
+
+Features:
+
+- Bypass adblockers by sending count data as JSON
+- Extract client IP when goatcounter is sitting on top of multiple backends
+
+Fixes:
+
+- N/A
+
 2023-12-10 v2.5.0
 -----------------
 This release requires Go 1.21.
