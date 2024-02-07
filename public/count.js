@@ -125,18 +125,20 @@
 		return false
 	}
 
-	// Get URL to send to GoatCounter.
-	window.goatcounter.url = function(vars) {
+	// Get data to send to GoatCounter.
+	window.goatcounter.data = function(vars) {
 		var data = get_data(vars || {})
 		if (data.p === null)  // null from user callback.
 			return
 		data.rnd = Math.random().toString(36).substr(2, 5)  // Browsers don't always listen to Cache-Control.
 
-		var endpoint = get_endpoint()
-		if (!endpoint)
-			return warn('no endpoint found')
+		for(const k in data) {
+			if(Array.isArray(data[k])) {
+				data[k] = data[k].toString()
+			}
+		}
 
-		return endpoint + urlencode(data)
+		return data;
 	}
 
 	// Count a hit.
@@ -144,10 +146,12 @@
 		var f = goatcounter.filter()
 		if (f)
 			return warn('not counting because of: ' + f)
-		var url = goatcounter.url(vars)
-		if (!url)
+		var data = goatcounter.data(vars)
+		var url = get_endpoint()
+		if (!data || !url)
 			return warn('not counting because path callback returned null')
-		navigator.sendBeacon(url)
+
+		fetch(url, { body: JSON.stringify(data), method: 'POST' })
 	}
 
 	// Get a query parameter.
