@@ -4,6 +4,17 @@ This list is not comprehensive, and only lists new features and major changes,
 but not every minor bugfix. The goatcounter.com service generally runs the
 latest master.
 
+2024-02-08 v-freitzzz-2.5.2
+-----------------
+
+Features:
+
+- Fix extraction of Client IP
+
+Fixes:
+
+- N/A
+
 2024-02-07 v-freitzzz-2.5.1
 -----------------
 
