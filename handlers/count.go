@@ -130,7 +130,7 @@ func extractClientIP(r *http.Request) string {
 	rip = ffips
 	ips := strings.Split(rip, ", ")
 	if len(ips) > 1 {
-		rip = ips[len(ips) - 1]
+		rip = ips[0]
 	}
 
 	return rip
