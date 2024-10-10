@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+docker_tag=goat-counter:latest
+
+docker build \
+    -f ./deployments/Dockerfile \
+    . -t $docker_tag

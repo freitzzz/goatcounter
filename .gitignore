@@ -24,3 +24,5 @@
 
 # Dev log
 /.dev.log
+
+*.env
