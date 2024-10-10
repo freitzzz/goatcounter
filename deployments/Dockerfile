@@ -1,6 +1,8 @@
 FROM golang:1.23.1-alpine AS builder
 WORKDIR /app
 
+RUN apk add gcc g++
+
 COPY go.mod ./
 COPY go.sum ./
 COPY bgrun/ ./bgrun/
