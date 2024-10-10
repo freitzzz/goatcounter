@@ -11,7 +11,7 @@ if [ "$1" = '-d' ]; then
 fi
 
 docker run $daemon_flag \
-    -p $server_port:$server_port \
+    -p $server_port:$80 \
     --mount "type=bind,src=$db_path,dst=$db_path" \
     --env-file .env \
     -t $docker_tag
