@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+export $(grep -v '^#' .env | xargs)
+
+./goatcounter serve -listen "0.0.0.0:$server_port" -tls proxy -db "sqlite+db/db.sqlite3" serve
