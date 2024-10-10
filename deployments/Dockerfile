@@ -3,12 +3,12 @@ WORKDIR /app
 
 COPY go.mod ./
 COPY go.sum ./
+COPY bgrun/ ./bgrun/
 
 RUN go mod download
 
-COPY cmd/ ./cmd/
 COPY acme/ ./acme/
-COPY bgrun/ ./bgrun/
+COPY cmd/ ./cmd/
 COPY cron/ ./cron/
 COPY db/ ./db/
 COPY handlers/ ./handlers/
